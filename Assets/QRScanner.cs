@@ -13,10 +13,12 @@ public class QRScanner : MonoBehaviour
     private Texture defaultBackGround;
     string QrCode = string.Empty;
     public RawImage backGround;
+    public RectTransform scanZone;
     public AspectRatioFitter fit;
-    public GameObject buttonScan;   
+    public GameObject scanGroup;   
     public GameObject ResultBox; 
     public TextMeshProUGUI textBox;
+    public Button buttonScan;
 
     void Start()
     {
@@ -24,7 +26,7 @@ public class QRScanner : MonoBehaviour
     }
 
     private void SetUpCamera()
-    {
+    {        
         defaultBackGround = backGround.texture;
         WebCamDevice[] devices = WebCamTexture.devices;
 
@@ -39,7 +41,7 @@ public class QRScanner : MonoBehaviour
         {
             if(!d.isFrontFacing)
             {
-                backCam = new WebCamTexture(d.name, Screen.width, Screen.height);
+                backCam = new WebCamTexture(d.name, (int)scanZone.rect.width, (int)scanZone.rect.height);
             }            
         }
 
@@ -75,7 +77,8 @@ public class QRScanner : MonoBehaviour
     }
    
     IEnumerator GetQRCode()
-    {
+    {        
+        buttonScan.onClick.RemoveAllListeners();
         IBarcodeReader barCodeReader = new BarcodeReader();
         var snap = new Texture2D(backCam.width, backCam.height, TextureFormat.ARGB32, false);
         while (string.IsNullOrEmpty(QrCode))
@@ -90,7 +93,9 @@ public class QRScanner : MonoBehaviour
                     if (!string.IsNullOrEmpty(QrCode))
                     {
                         ResultBox.SetActive(true);
+                        scanGroup.SetActive(false);
                         textBox.text = QrCode;
+                        backGround.texture = defaultBackGround;
                         break;
                     }
                 }
@@ -98,12 +103,12 @@ public class QRScanner : MonoBehaviour
             catch (Exception ex) { Debug.LogWarning(ex.Message); }
             yield return null;
         }
+        backCam.Stop();        
     }
     
     public void OnScanClick()
     {
         StartCoroutine(GetQRCode());
-        buttonScan.SetActive(false);
     }
 
     public void QuitTool()
@@ -119,8 +124,11 @@ public class QRScanner : MonoBehaviour
 
     public void Cancel()
     {
-        buttonScan.SetActive(true);        
+        scanGroup.SetActive(true);        
         ResultBox.SetActive(false);
         QrCode = string.Empty;
+        backGround.texture = backCam;
+        backCam.Play();
+        buttonScan.onClick.AddListener(OnScanClick);
     }
 }
