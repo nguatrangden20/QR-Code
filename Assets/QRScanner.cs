@@ -121,7 +121,6 @@ public class QRScanner : MonoBehaviour
     {
         buttonScan.SetActive(true);        
         ResultBox.SetActive(false);
-        buttonScan.GetComponent<Button>().onClick.RemoveAllListeners();
-        buttonScan.GetComponent<Button>().onClick.AddListener(OnScanClick);
+        QrCode = string.Empty;
     }
 }
